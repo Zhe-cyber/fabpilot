@@ -1,0 +1,34 @@
+# Secrets — NEVER commit (public repo during judging; see docs/THREAT_MODEL.md T3)
+.env
+.env.*
+*.key
+*.pem
+secrets/
+credentials*.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node / dashboard
+node_modules/
+dist/
+build/
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Run artifacts
+runs/
+*.local
