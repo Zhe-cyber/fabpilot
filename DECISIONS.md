@@ -79,6 +79,19 @@
   panel (2), and a bulletproof, regression-tested demo (3). Each also doubles as
   competition-scoring material.
 
+### D-015 MQTT transport: Mosquitto over Docker (2026-06-17)
+- **Decision:** Telemetry flows over MQTT (paho-mqtt client, QoS 1) to a Mosquitto
+  broker run via `docker compose`, topic `fabpilot/telemetry/<machine_id>`. The
+  consumer feeds the same reading-dicts to the existing detector — transport is
+  transparent, proving the seam that let detection be built before the bus.
+- **Why:** The message bus is the architecture's backbone and the networking
+  differentiation. Docker makes the broker reproducible for the judged repo
+  (`docker compose up -d`). Verified: 120/120 readings round-tripped, only M2 flagged.
+- **Security:** broker bound to `127.0.0.1`; anonymous/plaintext acceptable only
+  because it is not network-exposed. Auth + TLS deferred (threat T4).
+- **Deferred (YAGNI):** reconnection logic; TLS/auth; wiring the agent to the MQTT
+  consumer (next slice — the agent currently runs off the in-process orchestrator).
+
 ### D-014 End-to-end spine: typed action tools wired to the detector (2026-06-17)
 - **Decision:** The agent's "act" step uses in-process SDK MCP tools
   (`schedule_maintenance`, `reroute_job`) — input-validated, structured errors —

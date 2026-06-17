@@ -1,0 +1,13 @@
+# Local Mosquitto broker for FabPilot telemetry.
+#   docker compose up -d      # start
+#   docker compose down       # stop
+services:
+  broker:
+    image: eclipse-mosquitto:2
+    container_name: fabpilot-broker
+    ports:
+      # Bound to localhost on purpose: the demo broker is anonymous/plaintext, so
+      # it must not be reachable from the network (threat T4, docs/THREAT_MODEL.md).
+      - "127.0.0.1:1883:1883"
+    volumes:
+      - ./infra/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
