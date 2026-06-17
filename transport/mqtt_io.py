@@ -28,11 +28,11 @@ HOST = os.environ.get("FABPILOT_BROKER_HOST", "localhost")
 PORT = int(os.environ.get("FABPILOT_BROKER_PORT", "1883"))
 
 
-def _client(name: str) -> mqtt.Client:
+def make_client(name: str) -> mqtt.Client:
     return mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=name)
 
 
-def _decode(payload: bytes) -> dict | None:
+def decode_payload(payload: bytes) -> dict | None:
     """Decode a telemetry payload; None means 'arrived but corrupt' (vs. dropped)."""
     try:
         return json.loads(payload)
@@ -43,7 +43,7 @@ def _decode(payload: bytes) -> dict | None:
 def publish_readings(readings: Iterable[dict], host: str = HOST, port: int = PORT,
                      delay: float = 0.0) -> int:
     """Publish each reading to fabpilot/telemetry/<machine_id> (qos 1). Returns count."""
-    client = _client("fabpilot-publisher")
+    client = make_client("fabpilot-publisher")
     client.connect(host, port)
     client.loop_start()
     try:
@@ -71,8 +71,8 @@ if __name__ == "__main__":
     readings = list(run_line(line, ticks=40, fault_at=18, fault_machine=line[1]))
 
     received: queue.Queue[dict | None] = queue.Queue()
-    consumer = _client("fabpilot-consumer")
-    consumer.on_message = lambda c, u, msg: received.put(_decode(msg.payload))
+    consumer = make_client("fabpilot-consumer")
+    consumer.on_message = lambda c, u, msg: received.put(decode_payload(msg.payload))
     try:
         consumer.connect(HOST, PORT)
     except (ConnectionRefusedError, OSError) as exc:

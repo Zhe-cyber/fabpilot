@@ -79,6 +79,21 @@
   panel (2), and a bulletproof, regression-tested demo (3). Each also doubles as
   competition-scoring material.
 
+### D-016 Distributed pipeline: publisher + consumer service over MQTT (2026-06-17)
+- **Decision:** Split into two processes — `transport/publisher.py` (machines/edge,
+  streams telemetry) and `transport/consumer.py` (central: subscribe → detect →
+  agent acts). paho's network thread enqueues readings; an asyncio loop drains them
+  off-thread (`asyncio.to_thread`) and awaits the budget-capped agent, so the bus
+  never blocks. One agent response per machine episode.
+- **Why:** Realizes the real distributed architecture (machines → broker → central
+  agent) — the networking differentiation made literal. Verified across two
+  processes: M2's fault detected over MQTT, agent scheduled maintenance + rerouted
+  ($0.17/run).
+- **Reuse:** promoted `mqtt_io._client`/`_decode` to public `make_client`/`decode_payload`.
+- **Reviewed (code-reviewer):** subscribe moved into the `on_connect` callback to
+  avoid a race that could silently drop early readings; added a broker-unreachable
+  guard with an actionable message.
+
 ### D-015 MQTT transport: Mosquitto over Docker (2026-06-17)
 - **Decision:** Telemetry flows over MQTT (paho-mqtt client, QoS 1) to a Mosquitto
   broker run via `docker compose`, topic `fabpilot/telemetry/<machine_id>`. The
