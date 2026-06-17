@@ -80,6 +80,9 @@ async def run(seed: str) -> dict:
 
 
 if __name__ == "__main__":
+    # Agent output may contain non-ASCII; force UTF-8 so the Windows console
+    # (cp1252) can't crash a run on a stray glyph.
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     # Running this with the default seed is the slice's smoke test.
     seed = " ".join(sys.argv[1:]) or "Create hello.txt with one line: FabPilot loop online."
     asyncio.run(run(seed))

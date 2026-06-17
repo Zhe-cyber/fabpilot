@@ -79,6 +79,22 @@
   panel (2), and a bulletproof, regression-tested demo (3). Each also doubles as
   competition-scoring material.
 
+### D-014 End-to-end spine: typed action tools wired to the detector (2026-06-17)
+- **Decision:** The agent's "act" step uses in-process SDK MCP tools
+  (`schedule_maintenance`, `reroute_job`) — input-validated, structured errors —
+  not generic file/shell tools. `agent/respond.py` runs one budget-capped agent
+  call per anomaly with ONLY those tools; `agent/orchestrate.py` connects
+  sim → detector → respond (one response per machine episode for cost control).
+- **Why:** Realizes the D-012 typed-tools upgrade. The agent can only schedule or
+  reroute — nothing else — so threat T2 (shell access) is closed by construction.
+  Verified end-to-end: M2's injected fault was detected, the agent assessed
+  imminent bearing failure and called both tools; `runs/actions.jsonl` is the audit
+  trail. Inputs are coerced/validated so bad LLM args return errors, not crashes.
+- **Also:** forced UTF-8 stdout at entry points — the Windows console (cp1252)
+  crashed on the sigma symbol in the agent's reasoning.
+- **Deferred (YAGNI):** consumer handling of non-success records with partial
+  actions; renaming the event `seed` field to `prompt`. Noted, not blockers.
+
 ### D-013 Anomaly detector: frozen-baseline z-score with persistence (2026-06-17)
 - **Decision:** Per machine+sensor, learn a healthy baseline (mean/std) from a
   warmup window, **freeze** it, and flag readings > `threshold` sigma. Require
