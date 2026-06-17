@@ -79,6 +79,20 @@
   panel (2), and a bulletproof, regression-tested demo (3). Each also doubles as
   competition-scoring material.
 
+### D-013 Anomaly detector: frozen-baseline z-score with persistence (2026-06-17)
+- **Decision:** Per machine+sensor, learn a healthy baseline (mean/std) from a
+  warmup window, **freeze** it, and flag readings > `threshold` sigma. Require
+  `persistence` consecutive crossings to fire — and the same number of clear
+  readings to re-arm (symmetric) — edge-triggered so the agent loop runs once per
+  fault episode, not per tick.
+- **Why:** Faults are progressive; a trailing window would absorb the rising trend
+  and stop alerting on a visibly degrading machine. Persistence rejects single-
+  sample noise spikes (testing caught a real +4.1σ false positive on a healthy
+  machine). Symmetric re-arm stops a noisy mid-fault dip from double-invoking the
+  costly agent loop. The emitted `seed` string feeds the existing expander/loop.
+- **Deferred (YAGNI):** EWMA / adaptive baseline; per-message error handling at the
+  MQTT boundary (add when the bus exists, not before).
+
 ### D-012 Approach check vs. current practice — validated, two upgrades queued (2026-06-17)
 - **Habit adopted:** at each phase boundary, run an "approach check" against current
   official *and* community/industry sources, and log drift or better options here.
