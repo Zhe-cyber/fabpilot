@@ -79,6 +79,39 @@
   panel (2), and a bulletproof, regression-tested demo (3). Each also doubles as
   competition-scoring material.
 
+### D-017 Competitive benchmark + post-backend roadmap (2026-06-17)
+- **Why this entry:** the earlier "finalist-grade" self-assessment was uncalibrated
+  (placeholder rubric, no external reference). Official MAIC rubric still unavailable;
+  this benchmarks against the market and hackathon-finalist bar instead. Re-score
+  once the official criteria + entrant profile are in hand.
+- **Market bar (real PdM products — Tractian, NodeHub, Factory AI):** wireless
+  vibration/temp/acoustic sensors, supervised+unsupervised ML, **LSTM RUL at 85–95%**,
+  edge compute, no-code, deployed at customers; reliable horizon 5–15 days. FabPilot
+  is behind on quantitative prediction (ours is qualitative LLM text) and is simulated,
+  not deployed. We do NOT compete on ML accuracy.
+- **Closest reference — Microsoft `agentic-factory-hack`:** a 5-stage specialized
+  multi-agent PdM pipeline (anomaly-classify → fault-diagnose → repair-plan →
+  maintenance-schedule + parts-order → workflow orchestration), Azure/Foundry/Cosmos,
+  MCP, with per-machine **knowledge bases** grounding diagnosis. Implication: "agent
+  detects + acts" is NOT novel. Differentiation must come from execution + our angle.
+- **Finalist bar (Devpost/Claude/MIT/GitLab):** "feels like a product, not a demo";
+  does it work / worth doing / use again next week; production-grade needs
+  **evals + guardrails + observability + deployment story**, not a slick UI. FabPilot
+  is strong on guardrails/observability already; missing evals, dashboard, deployment.
+- **FabPilot's moat (lean in):** real MQTT streaming/distributed pipeline + edge
+  (Tiers 1–2) — a networking story the Azure-native references don't tell — and
+  laptop+Docker portability (no cloud lock-in).
+- **Post-backend roadmap (priority order):**
+  1. **Quantitative time-to-failure** (simple trend extrapolation RUL, not LSTM) —
+     closes the biggest market gap, makes "predicts failure" literally true.
+  2. **Networking/edge/multi-agent differentiation (Tiers 1–2)** — the moat; escapes
+     the Microsoft template.
+  3. **Eval/golden-scenario harness (D-008) + dashboard** — both are named finalist
+     criteria (evals + "feels like a product").
+  4. **Deployment/real-data story** — "same MQTT topics map to real PdM sensors".
+  5. **Lightweight knowledge-grounding** (small per-machine KB the agent reads) —
+     cheaply matches Microsoft's diagnosis credibility.
+
 ### D-016 Distributed pipeline: publisher + consumer service over MQTT (2026-06-17)
 - **Decision:** Split into two processes — `transport/publisher.py` (machines/edge,
   streams telemetry) and `transport/consumer.py` (central: subscribe → detect →
