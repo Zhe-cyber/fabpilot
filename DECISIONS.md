@@ -79,6 +79,20 @@
   panel (2), and a bulletproof, regression-tested demo (3). Each also doubles as
   competition-scoring material.
 
+### D-018 Quantitative time-to-failure implemented — roadmap lever #1 (2026-06-17)
+- **Decision:** `detect/forecast.py` adds first-order RUL — linear-fit each sensor's
+  recent trend and project to a domain failure threshold (ISO 10816 7.1 mm/s for
+  vibration, etc.). The detector enriches each anomaly seed with "~N readings to the
+  threshold" and a `ttf_readings` field, so the agent reasons from a number, not just
+  a deviation. Stdlib only; no ML.
+- **Why:** closes the biggest market gap from D-017 cheaply, and makes "predicts
+  time-to-failure" literally true. Vibration (the dominant fault signature) shows the
+  soonest ETA, so the agent can prioritise correctly.
+- **Reviewed (code-reviewer):** guarded `linear_regression` against a constant-x
+  crash; shrank the fit window (12→8) and **documented the optimistic bias** (a flat
+  pre-fault prefix shallows the slope, so the estimate errs long) as an owned Q&A
+  point, with a self-check that demonstrates it.
+
 ### D-017 Competitive benchmark + post-backend roadmap (2026-06-17)
 - **Why this entry:** the earlier "finalist-grade" self-assessment was uncalibrated
   (placeholder rubric, no external reference). Official MAIC rubric still unavailable;

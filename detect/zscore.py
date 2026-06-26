@@ -14,8 +14,9 @@ baselines are the documented upgrade (DECISIONS.md D-013).
 Detection requires `persistence` consecutive crossings before firing, so a single
 noisy sample can't raise a false alarm — a real fault sustains the deviation, a
 noise spike doesn't. It is also edge-triggered: one event per episode, not one per
-tick, so the downstream agent loop fires once per fault, not every reading.
-Stdlib only (statistics).
+tick, so the downstream agent loop fires once per fault, not every reading. Each
+event also carries a first-order time-to-failure estimate (see detect/forecast.py),
+so the agent reasons from a number, not just a deviation. Stdlib only (statistics).
 
 Run:  python -m detect.zscore     # feeds the simulator through the detector
 """
@@ -23,7 +24,10 @@ Run:  python -m detect.zscore     # feeds the simulator through the detector
 from __future__ import annotations
 
 import statistics
+from collections import deque
 from dataclasses import dataclass, field
+
+from detect.forecast import FAILURE_THRESHOLDS, time_to_failure
 
 SENSORS = ("vibration", "temperature", "current")
 UNITS = {"vibration": "mm/s", "temperature": "degC", "current": "A"}
@@ -38,6 +42,8 @@ class _Baseline:
     streak: int = 0       # consecutive readings currently over threshold
     cool: int = 0         # consecutive readings currently under threshold
     firing: bool = False  # currently inside an anomaly episode (edge-trigger latch)
+    n: int = 0            # count of post-warmup readings (x-axis for the trend fit)
+    recent: deque = field(default_factory=lambda: deque(maxlen=8))  # (n, value) recent-trend window
 
 
 @dataclass
@@ -65,12 +71,14 @@ class ZScoreDetector:
                 continue
 
             z = (value - base.mean) / base.std
+            base.recent.append((base.n, value))  # keep the recent trend for forecasting
+            base.n += 1
             if abs(z) >= self.threshold:
                 base.streak += 1
                 base.cool = 0
                 if base.streak >= self.persistence and not base.firing:
                     base.firing = True  # rising edge, confirmed by persistence
-                    events.append(self._event(reading, sensor, value, z, base.mean))
+                    events.append(self._event(reading, sensor, value, z, base.mean, base.recent))
             else:
                 base.streak = 0
                 base.cool += 1
@@ -81,12 +89,20 @@ class ZScoreDetector:
         return events
 
     @staticmethod
-    def _event(reading: dict, sensor: str, value: float, z: float, baseline: float) -> dict:
+    def _event(reading: dict, sensor: str, value: float, z: float, baseline: float, recent) -> dict:
         unit = UNITS[sensor]
+        threshold = FAILURE_THRESHOLDS[sensor]
+        ttf = time_to_failure(list(recent), threshold)
+        if ttf is None:
+            horizon = f"not yet trending to the {threshold:g} {unit} failure threshold"
+        elif ttf == 0.0:
+            horizon = f"already at/over the {threshold:g} {unit} failure threshold"
+        else:
+            horizon = f"~{ttf:.0f} readings to the {threshold:g} {unit} failure threshold"
         seed = (
             f"{reading['machine_id']} {sensor} reading {value:.2f} {unit} is "
-            f"{z:+.1f} sigma above its healthy baseline of {baseline:.2f} {unit}. "
-            f"Assess the failure risk and act."
+            f"{z:+.1f} sigma above its healthy baseline of {baseline:.2f} {unit}; "
+            f"{horizon}. Assess the failure risk and act."
         )
         return {
             "machine_id": reading["machine_id"],
@@ -94,6 +110,7 @@ class ZScoreDetector:
             "value": value,
             "z": round(z, 2),
             "baseline": round(baseline, 2),
+            "ttf_readings": round(ttf, 1) if ttf is not None else None,
             "ts": reading["ts"],
             "seed": seed,  # one-line seed the agent's expander consumes
         }
@@ -122,4 +139,5 @@ if __name__ == "__main__":
     # exactly once, never re-fires on the same ongoing fault.
     per_sensor = Counter((event["machine_id"], event["sensor"]) for event in fired)
     assert all(count == 1 for count in per_sensor.values()), f"re-fired: {dict(per_sensor)}"
+    assert any(e["ttf_readings"] is not None for e in fired), "no time-to-failure estimate produced"
     print(f"# self-check OK: only M2 flagged, once per sensor ({len(fired)} event(s))")
