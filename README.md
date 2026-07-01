@@ -55,6 +55,36 @@ Full rationale for every choice lives in [`DECISIONS.md`](DECISIONS.md).
 
 ---
 
+## Where FabPilot fits
+
+Predictive maintenance is a crowded market, so FabPilot is deliberate about what is
+genuinely new here — and what isn't.
+
+- **Detection isn't the novelty.** Commercial tools already do sensor-to-work-order.
+  The condition-monitoring leader's newest "closed-loop" product
+  ([Augury + MaintainX, March 2026](https://www.prnewswire.com/news-releases/augury-and-maintainx-partner-to-deliver-closed-loop-maintenance-execution-for-frontline-teams-302722467.html))
+  still **auto-drafts a work order for a human technician to execute** — it automates
+  the workflow, not the decision, and it doesn't reroute production.
+- **In semiconductors, closed-loop control already exists.** FDC (fault detection &
+  classification) can interdict a tool, and run-to-run control auto-adjusts recipes
+  between runs. FabPilot does **not** claim to have invented closed-loop action — those
+  are proven, per-tool, rule/SPC-based reflexes.
+- **What FabPilot demonstrates is the *governed next step*:** an **inspectable reasoning
+  layer** (you can audit *why* it acted, not just that a threshold tripped), **bounded
+  typed actions** (the agent can only emit validated `schedule_maintenance` /
+  `reroute_job` calls — never raw commands), and, at **Tier 1**, **coordination across
+  machines over a real message bus**. The wedge is transparency + line-level
+  coordination *on top of* proven control — not a claim to replace it.
+- **Why "governed", not "autonomous" as a boast.** The 2026 barrier to industrial
+  agents is trust and auditability, not raw capability: on IBM's
+  [AssetOpsBench](https://arxiv.org/pdf/2506.03828), no agent exceeds ~70% task
+  completion, and a plan-ahead orchestration style *regresses* to 46%. FabPilot answers
+  that by gating the LLM behind statistical detection, keeping routing deterministic,
+  and making every decision inspectable and reversible — a demonstration of the
+  *governed path* to autonomy, not a claim to be trusted with a live line today.
+
+---
+
 ## Quickstart
 
 Requires **Python 3.10+** (uses `statistics.linear_regression`) and **Docker** (for

@@ -6,6 +6,38 @@
 
 ---
 
+## 2026-07-02 — Competitive positioning, verified against primary sources
+
+### D-024 The honest wedge: governed autonomy, not "first to close the loop"
+- **Decision:** FabPilot's public positioning (README "Where FabPilot fits") leads with
+  a *governed next step* framing, not a novelty claim: detection isn't the wedge;
+  inspectable reasoning + bounded typed actions + (Tier 1) cross-machine coordination
+  over a real bus is. We explicitly concede that closed-loop control already exists
+  (fab FDC/R2R; Augury+MaintainX auto-work-orders) and differentiate on transparency
+  and line-level coordination *on top of* proven control.
+- **Why:** two research passes (domain-researcher + practice-scout) converged: the 2026
+  frontier is trust/auditability, not capability. Leading with "autonomous" as a boast
+  is the naive tell; leading with "governed, inspectable, bounded" answers the question
+  the field is actually asking.
+- **Verified against primary sources (per the standing external-reference rule):**
+  - ✅ Augury + MaintainX (prnewswire, **2026-03-24**): closed-loop, but a **human
+    technician still executes**; no rerouting. Safe to cite.
+  - ✅ IBM **AssetOpsBench** ([arXiv 2506.03828](https://arxiv.org/pdf/2506.03828)):
+    GPT-4.1 ~**65%** task completion, **no model >70%**, plan-ahead orchestration
+    regresses to **46%** — independently supports our "reasoning at decision points,
+    deterministic routing" design and the D-023 rejection of heavy orchestration.
+- **KILLED — do not resurrect:** a scout-surfaced arXiv paper *"Bounded Autonomy: Typed
+  Action Contracts and Consumer-Side Execution"* (id 2604.14723) could **not be
+  verified to exist** — the fetch confabulated title/authors rather than reading a real
+  page. The bounded-autonomy *concept* is fine to describe as a design principle we
+  followed; **never cite that paper.** (Lesson: scout claims that map to a specific
+  citation/number get verified before they enter a deliverable.)
+- **Rejected:** overclaiming "first to close the loop" (false in fabs and in the PdM
+  market); competing on prediction accuracy vs LSTM/physics models (D-017 — we compete
+  on the governed loop + networking, not accuracy).
+
+---
+
 ## 2026-07-01 — Tier 1: reroute coordination over the bus (contract-net)
 
 ### D-023 One-shot request→bid→award, not peer negotiation; MCP trigger detached
