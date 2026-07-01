@@ -6,6 +6,29 @@
 
 ---
 
+## 2026-07-01 — Live dashboard (the showable-reasoning demo)
+
+### D-021 Dashboard streams the pipeline over SSE (stdlib), in-process
+- **Decision:** `dashboard/` serves one page that streams detect→reason→act to the
+  browser live: machine cards with telemetry + failure-threshold bars, anomalies, and
+  the agent's reasoning + actions. Built on `agent.orchestrate.run(emit=...)`, a new
+  seam that streams every step without duplicating the pipeline.
+- **Transport = Server-Sent Events, not WebSocket.** Data flows one way (server →
+  browser), so SSE is the right primitive: **stdlib-only** (`http.server`, no new
+  dependency — fits the ponytail/stdlib-first rule), auto-reconnecting, no back-channel
+  we'd never use. Raised and chosen over the backlog's loose "WebSocket" wording.
+- **In-process pipeline, not MQTT-fed.** For the highest-stakes live moment, one
+  command with no broker beats the two-terminal broker dance (and its start-order
+  footgun). The MQTT distributed story is told elsewhere; robustness wins here.
+- **Reviewed; the fixes were all one theme — make failure *visible*.** A mid-run error
+  now ends with a visible error state instead of a frozen "running…" page; events that
+  can't serialize degrade to text instead of aborting the run; malformed agent actions
+  render safely. Windows SSE-disconnect tracebacks suppressed two ways.
+- **Rejected (YAGNI):** the auto-trigger hook, charts library, persistence, auth, and a
+  full DOM-node rewrite of the feed (escaping is correct for the current markup).
+
+---
+
 ## 2026-07-01 — Team charter, backlog, and working rhythm
 
 ### D-020 Charter + backlog + human-gated resume (not token-sensing autonomy)

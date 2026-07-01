@@ -7,15 +7,6 @@
 
 ## Now (top of queue)
 
-- [ ] **Live dashboard (showable reasoning)** — *lead.*
-  The demo is the moment judges remember; CLAUDE.md requires the agent's reasoning be
-  *showable* live. JS/CSS + WebSocket pushing telemetry streams + the agent's
-  decisions.
-  *Done when:* a browser page shows live machine streams and each anomaly → the
-  agent's reasoning → the action it took. Runs end-to-end. Reviewed.
-
-## Next
-
 - [ ] **Golden-scenario test harness** (D-008 essential #3) — *lead + code-reviewer.*
   A fixed, seeded fault scenario with expected detections/actions, so we can prove the
   system works the same way every time — kills "fragile live demo" risk.
@@ -52,3 +43,10 @@
 - [x] Public README telling the MCP/MQTT/agent-loop architecture story — reviewed for
   factual accuracy against the code (consumer-first ordering fixed, audit-trail claim
   tightened to the real demo files).
+- [x] Live dashboard (`dashboard/`) — SSE streams detect→reason→act to the browser;
+  verified end-to-end and reviewed. Fixes from review: a mid-run error now ends
+  *visibly* (no frozen page), non-serializable events degrade to text, malformed
+  agent actions render safely.
+  *Deferred nice-to-haves (only if we touch it again):* late-joining clients get no
+  state snapshot (dashboard is single-session); rebuild the agent feed entry from DOM
+  nodes instead of innerHTML to remove XSS reasoning entirely (escaping is correct today).

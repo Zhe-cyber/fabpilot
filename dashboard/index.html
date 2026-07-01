@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FabPilot — Live</title>
+<style>
+  :root {
+    --bg: #0e1116; --panel: #171c24; --line: #262d38; --text: #e6edf3;
+    --muted: #8b98a8; --accent: #4aa8ff; --ok: #3fb950; --warn: #d29922; --bad: #f85149;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.5 -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  }
+  header {
+    display: flex; align-items: center; gap: 16px;
+    padding: 14px 20px; border-bottom: 1px solid var(--line); background: var(--panel);
+  }
+  header h1 { font-size: 18px; margin: 0; letter-spacing: .3px; }
+  header .sub { color: var(--muted); font-size: 13px; }
+  header .spacer { flex: 1; }
+  #status { color: var(--muted); font-size: 13px; }
+  button {
+    background: var(--accent); color: #04121f; border: 0; border-radius: 6px;
+    padding: 8px 16px; font-weight: 600; font-size: 14px; cursor: pointer;
+  }
+  button:disabled { opacity: .5; cursor: default; }
+  main { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 12px; }
+  .machines { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px; transition: border-color .2s, box-shadow .2s;
+  }
+  .card.alert { border-color: var(--bad); box-shadow: 0 0 0 1px var(--bad) inset; }
+  .card h3 { margin: 0 0 4px; font-size: 16px; }
+  .card .ttf { min-height: 18px; font-size: 12px; color: var(--warn); margin-bottom: 8px; }
+  .sensor { margin: 8px 0; }
+  .sensor .row { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+  .sensor .val { color: var(--text); font-variant-numeric: tabular-nums; }
+  .bar { height: 6px; background: var(--line); border-radius: 3px; margin-top: 3px; overflow: hidden; }
+  .bar > span { display: block; height: 100%; width: 0; background: var(--ok); transition: width .2s, background .2s; }
+  #feed { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px; height: 70vh; overflow-y: auto; }
+  .entry { border-bottom: 1px solid var(--line); padding: 10px 8px; font-size: 14px; }
+  .entry:last-child { border-bottom: 0; }
+  .entry .time { color: var(--muted); font-size: 12px; margin-right: 6px; }
+  .entry.anomaly { color: var(--warn); }
+  .entry.agent .who { color: var(--accent); font-weight: 600; }
+  .entry.agent .reason { color: var(--text); margin: 6px 0; white-space: pre-wrap; }
+  .entry.agent .act { color: var(--ok); font-size: 13px; }
+  .entry.agent .meta { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .empty { color: var(--muted); padding: 20px; text-align: center; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>FabPilot</h1>
+    <div class="sub">autonomous predictive-monitoring · detect → reason → act</div>
+  </div>
+  <div class="spacer"></div>
+  <span id="status">idle</span>
+  <button id="start">Start run</button>
+</header>
+
+<main>
+  <section>
+    <h2>Machine line</h2>
+    <div class="machines" id="machines"></div>
+  </section>
+  <section>
+    <h2>Agent activity</h2>
+    <div id="feed"><div class="empty">Click “Start run” to stream the line.</div></div>
+  </section>
+</main>
+
+<script>
+  // Failure thresholds mirror detect/forecast.py FAILURE_THRESHOLDS — bars fill toward these.
+  const SENSORS = [
+    { key: "vibration",   unit: "mm/s", max: 7.1 },
+    { key: "temperature", unit: "°C",   max: 80.0 },
+    { key: "current",     unit: "A",    max: 14.0 },
+  ];
+  const MACHINES = ["M1", "M2", "M3"];
+  const els = {};  // machineId -> { card, ttf, sensors: { key -> {val, bar} } }
+
+  const machinesEl = document.getElementById("machines");
+  for (const id of MACHINES) {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `<h3>${id}</h3><div class="ttf"></div>`;
+    const sensors = {};
+    for (const s of SENSORS) {
+      const wrap = document.createElement("div");
+      wrap.className = "sensor";
+      wrap.innerHTML = `<div class="row"><span>${s.key}</span><span class="val">—</span></div>
+                        <div class="bar"><span></span></div>`;
+      card.appendChild(wrap);
+      sensors[s.key] = { val: wrap.querySelector(".val"), bar: wrap.querySelector(".bar > span") };
+    }
+    machinesEl.appendChild(card);
+    els[id] = { card, ttf: card.querySelector(".ttf"), sensors };
+  }
+
+  const feed = document.getElementById("feed");
+  function addEntry(html, cls) {
+    if (feed.querySelector(".empty")) feed.innerHTML = "";
+    const div = document.createElement("div");
+    div.className = "entry " + cls;
+    div.innerHTML = html;
+    feed.prepend(div);
+  }
+  const clock = (ts) => new Date(ts * 1000).toLocaleTimeString();
+  const esc = (s) => String(s ?? "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+  function onReading(r) {
+    const m = els[r.machine_id];
+    if (!m) return;
+    for (const s of SENSORS) {
+      const v = r[s.key];
+      m.sensors[s.key].val.textContent = v.toFixed(2) + " " + s.unit;
+      const pct = Math.min(100, (v / s.max) * 100);
+      const bar = m.sensors[s.key].bar;
+      bar.style.width = pct + "%";
+      bar.style.background = pct >= 100 ? "var(--bad)" : pct >= 70 ? "var(--warn)" : "var(--ok)";
+    }
+  }
+  function onAnomaly(e) {
+    const m = els[e.machine_id];
+    if (m) {
+      m.card.classList.add("alert");
+      m.ttf.textContent = e.ttf_readings != null ? `~${e.ttf_readings} readings to failure` : "trend forming";
+    }
+    addEntry(`<span class="time">${clock(e.ts)}</span>⚠ ${esc(e.machine_id)} ${esc(e.sensor)} `
+      + `${e.value.toFixed(2)} (${e.z >= 0 ? "+" : ""}${e.z}σ)`
+      + (e.ttf_readings != null ? ` · ~${e.ttf_readings} readings to failure` : ""), "anomaly");
+  }
+  function onAgent(rec) {
+    const acts = (rec.actions || []).map(a => {
+      const name = String(a.tool ?? "").replace("mcp__fabpilot__", "");
+      return `🔧 ${esc(name)} — ${esc(JSON.stringify(a.input))}`;
+    }).join("<br>") || "(assessed; no action needed)";
+    addEntry(
+      `<div class="who">🤖 FabPilot → ${esc(rec.machine_id)}</div>`
+      + (rec.reasoning ? `<div class="reason">${esc(rec.reasoning)}</div>` : "")
+      + `<div class="act">${acts}</div>`
+      + `<div class="meta">${esc(rec.subtype)} · ${rec.cost_usd != null ? "$" + rec.cost_usd.toFixed(4) : "cost n/a"}`
+      + `${rec.num_turns != null ? " · " + rec.num_turns + " turns" : ""}</div>`,
+      "agent");
+  }
+
+  const statusEl = document.getElementById("status");
+  const startBtn = document.getElementById("start");
+  function setRunning(on) {
+    startBtn.disabled = on;
+    statusEl.textContent = on ? "running…" : "idle";
+  }
+
+  const es = new EventSource("/events");
+  es.onmessage = (ev) => {
+    const msg = JSON.parse(ev.data);
+    switch (msg.type) {
+      case "reading": onReading(msg); break;
+      case "anomaly": onAnomaly(msg); break;
+      case "agent":   onAgent(msg);   break;
+      case "status":
+        if (msg.state === "running") setRunning(true);
+        if (msg.state === "done") { setRunning(false); statusEl.textContent = "done"; }
+        if (msg.state === "error") { setRunning(false); statusEl.textContent = "error: " + (msg.error || "run failed"); }
+        break;
+    }
+  };
+
+  startBtn.onclick = async () => {
+    // fresh run: clear alerts and feed
+    for (const id of MACHINES) { els[id].card.classList.remove("alert"); els[id].ttf.textContent = ""; }
+    feed.innerHTML = `<div class="empty">Streaming…</div>`;
+    setRunning(true);
+    const res = await fetch("/start").then(r => r.json());
+    if (!res.started) statusEl.textContent = "a run is already in progress";
+  };
+</script>
+</body>
+</html>
