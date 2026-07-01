@@ -7,12 +7,6 @@
 
 ## Now (top of queue)
 
-- [ ] **Golden-scenario test harness** (D-008 essential #3) — *lead + code-reviewer.*
-  A fixed, seeded fault scenario with expected detections/actions, so we can prove the
-  system works the same way every time — kills "fragile live demo" risk.
-  *Done when:* one command replays a canned scenario and asserts the expected anomaly
-  + action sequence. Reviewed.
-
 - [ ] **Tier 1: multi-agent reroute negotiation** — *lead + domain-researcher + practice-scout.*
   The networking moat (D-017): per-machine agents negotiate a reroute over the bus.
   This is the trigger to extract the `fabpilot` action server into a **standalone MCP
@@ -50,3 +44,8 @@
   *Deferred nice-to-haves (only if we touch it again):* late-joining clients get no
   state snapshot (dashboard is single-session); rebuild the agent feed entry from DOM
   nodes instead of innerHTML to remove XSS reasoning entirely (escaping is correct today).
+- [x] Golden-scenario harness (`evals/golden_scenario.py`) — locks the deterministic
+  sim→detect→forecast backbone (exact anomaly sequence), quarantines the LLM behind
+  opt-in `--live`. Reviewed. Review fix: hoisted the scenario into `sim/scenario.py`
+  as one shared source so the demo and the test can't drift; guarded `--live` against
+  an empty-events crash.

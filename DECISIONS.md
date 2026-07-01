@@ -6,6 +6,29 @@
 
 ---
 
+## 2026-07-01 — Golden-scenario harness (demo-safety)
+
+### D-022 Lock the deterministic backbone; quarantine the LLM behind --live
+- **Decision:** `evals/golden_scenario.py` replays the canned scenario and asserts the
+  exact anomaly sequence the sim→detector→forecast layer produces (deterministic under
+  a fixed seed). One command, no API, CI-safe, exit 0/1. The agent's reason→act step —
+  an LLM, non-deterministic and paid — is deliberately excluded from the golden
+  assertion and only exercised via an opt-in `--live` smoke.
+- **Why the split:** asserting an LLM in a "must-be-identical" test makes it flaky,
+  defeating the purpose. The value is precisely the separation: if a demo misbehaves,
+  the harness tells you instantly whether the deterministic backbone broke or the live
+  model did.
+- **Review fix — single source of truth:** the scenario inputs (seed/ticks/fault) were
+  duplicated in both `agent/orchestrate.py` (the demo) and the test. That's the one
+  real false-confidence gap — retune the demo, and the test keeps passing green while
+  validating a stale scenario. Hoisted them into `sim/scenario.py` (`canned_readings()`)
+  that both consume; also guarded `--live` against an empty-events crash. Verified the
+  demo dashboard still streams through the refactored path.
+- **Rejected (YAGNI):** asserting the agent's specific action choices deterministically;
+  a standalone per-assertion count check (already backstopped by the sequence match).
+
+---
+
 ## 2026-07-01 — Live dashboard (the showable-reasoning demo)
 
 ### D-021 Dashboard streams the pipeline over SSE (stdlib), in-process
