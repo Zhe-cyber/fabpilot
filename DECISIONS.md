@@ -6,6 +6,28 @@
 
 ---
 
+## 2026-07-01 — Team charter, backlog, and working rhythm
+
+### D-020 Charter + backlog + human-gated resume (not token-sensing autonomy)
+- **Decision:** Added `TEAM.md` (shared mission/vision/target + roster + collaboration
+  protocol so agents act mission-aware, not as blind tools) and `BACKLOG.md` (the
+  approved work queue the lead pulls from). The team works in reviewed slices, commits
+  at every safe point, and resumes by pulling the next backlog item.
+- **Why the rhythm, not a token-sensing loop:** the builder wished for a loop that
+  works until tokens burn out and auto-resumes on recharge. The lead **cannot read
+  plan quota** — no tool exposes it — so a self-sensing loop would be fiction. Instead
+  the *unit of work* (small, reviewed, committed slices off a resumable queue) gives
+  the same pause/resume behaviour: quota out = already at a clean commit; quota back =
+  next item. Human-gated resume is also the safety rail against freelancing.
+- **Dropped:** the auto-trigger hook proposed earlier — once the team-lead-loop was the
+  real goal, the hook was the weakest lever and pure noise. YAGNI.
+- **Rejected:** a persistent self-collaborating agent swarm for the dev workflow —
+  burns budget continuously, fights the tool's on-demand design, and is un-inspectable
+  (violates the project's own "reviewable" value). The autonomous multi-agent system
+  the builder wants is FabPilot's *product* (Tier 1), not its dev tooling.
+
+---
+
 ## 2026-07-01 — Team: add a practice-scout teammate
 
 ### D-019 Add a practice-scout agent to own "keep us current"
