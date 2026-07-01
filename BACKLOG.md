@@ -7,12 +7,6 @@
 
 ## Now (top of queue)
 
-- [ ] **Surface the architecture story in README + pitch** — *lead + pitch-review.*
-  We already use MCP (`create_sdk_mcp_server`), MQTT, and a typed detect→reason→act
-  loop and barely say so. Cheapest points on the board.
-  *Done when:* README states the MCP/MQTT/agent-loop stack plainly; pitch has a line
-  a judge can quote. Reviewed.
-
 - [ ] **Live dashboard (showable reasoning)** — *lead.*
   The demo is the moment judges remember; CLAUDE.md requires the agent's reasoning be
   *showable* live. JS/CSS + WebSocket pushing telemetry streams + the agent's
@@ -39,6 +33,8 @@
 
 - [ ] **Deployment / real-data story** — makes it real beyond the sim (D-017 lever 4).
 - [ ] **Lightweight knowledge-grounding** for the agent (D-017 lever 5).
+- [ ] **Pitch deck + quotable one-liner** — *pitch-review.* README now tells the
+  architecture story; the actual deck/summary is still to build.
 
 ## Parked (explicit — do not start without re-approval)
 
@@ -53,3 +49,6 @@
 - [x] Phase 3 slice 1: quantitative time-to-failure (RUL) + review closeout (D-018).
 - [x] Add `practice-scout` teammate (D-019).
 - [x] Team charter (`TEAM.md`) + this backlog.
+- [x] Public README telling the MCP/MQTT/agent-loop architecture story — reviewed for
+  factual accuracy against the code (consumer-first ordering fixed, audit-trail claim
+  tightened to the real demo files).
