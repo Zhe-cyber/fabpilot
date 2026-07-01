@@ -22,13 +22,21 @@ import statistics
 # Temperature/current: plausible trip points above nominal. Tune per real asset.
 FAILURE_THRESHOLDS = {"vibration": 7.1, "temperature": 80.0, "current": 14.0}
 
+# Longest horizon we'll report. A near-flat slope from ordinary noise can project
+# millions of readings ahead — technically positive, but not a credible trend. Past
+# this we say "no ETA" instead of surfacing a nonsense countdown to the agent/demo.
+# ~25x the 8-reading fit window: anything further out is noise, not a timeable fault.
+MAX_HORIZON = 200.0
+
 
 def time_to_failure(points: list[tuple[float, float]], threshold: float) -> float | None:
     """Readings until the trend reaches `threshold`.
 
     `points` is [(index, value), ...] in observation order. Returns a non-negative
     reading count, 0.0 if already at/over the threshold, or None when there is no
-    credible ETA (fewer than 2 points, or a flat/declining trend).
+    credible ETA (fewer than 2 points, a flat/declining trend, or a horizon so far
+    out — see MAX_HORIZON — that it's noise, not a trend). Uses only the raw points
+    and the domain threshold; independent of the detector's z-score baseline.
     """
     if not points:
         return None
@@ -44,7 +52,8 @@ def time_to_failure(points: list[tuple[float, float]], threshold: float) -> floa
     slope, _ = statistics.linear_regression(xs, ys)
     if slope <= 0:
         return None  # not trending toward failure
-    return (threshold - current) / slope
+    eta = (threshold - current) / slope
+    return eta if eta <= MAX_HORIZON else None  # reject noise-driven absurd horizons
 
 
 if __name__ == "__main__":
@@ -54,6 +63,8 @@ if __name__ == "__main__":
     assert time_to_failure([(i, 2.0) for i in range(11)], 7.1) is None  # flat -> no ETA
     assert time_to_failure([(i, 8.0) for i in range(11)], 7.1) == 0.0   # already failed
     assert time_to_failure([(5, 2.0), (5, 3.0)], 7.1) is None           # constant x -> guarded
+    tiny = [(i, 2.0 + 1e-6 * i) for i in range(11)]                      # near-flat noise slope
+    assert time_to_failure(tiny, 7.1) is None                           # absurd horizon -> no ETA
     # Flat prefix then a rise: the flat points shallow the slope, so the estimate
     # errs long vs the active-fault trend. Owned, documented bias (see module docstring).
     mixed = [(i, 2.0) for i in range(8)] + [(8 + j, 2.5 + 0.5 * j) for j in range(4)]

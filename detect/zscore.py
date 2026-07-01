@@ -27,10 +27,15 @@ import statistics
 from collections import deque
 from dataclasses import dataclass, field
 
-from detect.forecast import FAILURE_THRESHOLDS, time_to_failure
+from detect.forecast import FAILURE_THRESHOLDS, MAX_HORIZON, time_to_failure
 
 SENSORS = ("vibration", "temperature", "current")
 UNITS = {"vibration": "mm/s", "temperature": "degC", "current": "A"}
+
+# Every sensor we detect on needs a failure threshold to forecast against. Assert
+# it at import so adding a sensor without a threshold fails loudly here, not with a
+# KeyError at the first anomaly in a live demo.
+assert set(SENSORS) <= FAILURE_THRESHOLDS.keys(), "sensor missing a failure threshold"
 
 
 @dataclass
@@ -139,5 +144,9 @@ if __name__ == "__main__":
     # exactly once, never re-fires on the same ongoing fault.
     per_sensor = Counter((event["machine_id"], event["sensor"]) for event in fired)
     assert all(count == 1 for count in per_sensor.values()), f"re-fired: {dict(per_sensor)}"
-    assert any(e["ttf_readings"] is not None for e in fired), "no time-to-failure estimate produced"
-    print(f"# self-check OK: only M2 flagged, once per sensor ({len(fired)} event(s))")
+    ttfs = [e["ttf_readings"] for e in fired if e["ttf_readings"] is not None]
+    assert ttfs, "no time-to-failure estimate produced"
+    # Non-None isn't enough — a wrong-but-present number is the demo-embarrassing case.
+    # Every reported horizon must be non-negative and within the credible bound.
+    assert all(0 <= t <= MAX_HORIZON for t in ttfs), f"implausible TTF: {ttfs}"
+    print(f"# self-check OK: only M2 flagged, once per sensor ({len(fired)} event(s)); TTFs {ttfs}")

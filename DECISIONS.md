@@ -6,6 +6,25 @@
 
 ---
 
+## 2026-07-01 — Phase 3 slice 1 review closeout
+
+### D-018 Clamp the RUL horizon; close the missing review pass
+- **Decision:** The quantitative time-to-failure slice (D-017 lever #1) got its
+  code-reviewer pass late — the one it had skipped. One real bug fixed: a near-flat
+  noise slope could project an absurd horizon (millions of readings), which
+  `forecast.time_to_failure` now rejects via a `MAX_HORIZON = 200` bound (returns
+  "no ETA" instead). Plus two cheap guards: an import-time assert that every sensor
+  has a failure threshold, and a tightened detector self-check that asserts every
+  reported TTF is within a sane range, not merely non-None.
+- **Why:** An unbounded ETA is the worst *silent* failure here — no crash, just a
+  nonsense countdown on screen in front of judges. A bound turns it into an honest
+  "not credibly trending yet."
+- **Rejected (KISS):** `math.isfinite` input-validation guards and defensive
+  commentary the reviewer suggested — speculative gold-plating; current callers
+  never pass NaN/negative thresholds. YAGNI.
+
+---
+
 ## 2026-06-17 — Phase 0: foundation locked
 
 ### D-001 Build a reusable loop engine; FabPilot is its first application
