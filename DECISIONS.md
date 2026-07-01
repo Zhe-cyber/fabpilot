@@ -6,6 +6,41 @@
 
 ---
 
+## 2026-07-01 — Tier 1: reroute coordination over the bus (contract-net)
+
+### D-023 One-shot request→bid→award, not peer negotiation; MCP trigger detached
+- **Decision (scout-driven):** Build Tier 1 as a **trimmed contract-net over MQTT** —
+  the failing machine's agent broadcasts a reroute `request`; healthy machines' agents
+  publish a `bid` (headroom); a **deterministic arbiter** picks the best and publishes
+  the `award`. Slice A (`agent/fleet.py`) is the coordination mechanism; Slice B wires
+  it to the LLM decision + dashboard. The LLM decides *that* a reroute is warranted;
+  the routing math is plain code.
+- **Why:** the practice-scout found strong, consistent 2026 signal that symmetric
+  peer negotiation / multi-round haggling is what teams are *walking back* (~10× cost,
+  fragile, hallucinates in inter-agent messages). A one-shot contract-net reads as
+  genuinely distributed, leans on the networking strength, stays inspectable, and keeps
+  LLM cost flat. It's the smallest thing that's real, not a gimmick.
+- **Rejected (with the scout's reasons):** symmetric peer negotiation (fragile, no
+  upside); full orchestrator-worker (reroute isn't breadth-first — ~15× tokens for
+  nothing); blackboard/shared-state (MQTT topics already *are* the shared substrate);
+  always-on per-machine LLM loops (budget burn, un-inspectable — same reason D-020
+  rejected it for the dev workflow).
+- **Standalone-MCP trigger DETACHED from Tier 1:** the backlog assumed Tier 1 would
+  force the extraction. After reading the code, the scout confirmed it does not — the
+  distribution lives on the bus, and the arbiter + agents share the in-process
+  `ACTION_SERVER` fine. Deferred until a genuinely separate process needs the tools.
+- **Pitch caveat to bank:** with 3 machines, "multi-agent" is a small claim by count —
+  lean the story on *coordination over a real message bus with real bid messages*
+  (networking), which is a genuinely different shape from Microsoft's `agentic-factory-hack`
+  (a 5-agent *sequential orchestrator*), not a worse copy of it.
+- **Verification caveat:** Slice A's arbiter logic is verified; the over-the-bus
+  round-trip is NOT yet run live (Docker wouldn't start this session). Committed with an
+  explicit verify-pending-broker note; Slice B will exercise it. Review fixes applied:
+  arbiter can't crash on a malformed bid; subscribe race closed by construction
+  (on_subscribe Events, not sleeps); request-publish failure degrades to "nobody available".
+
+---
+
 ## 2026-07-01 — Golden-scenario harness (demo-safety)
 
 ### D-022 Lock the deterministic backbone; quarantine the LLM behind --live

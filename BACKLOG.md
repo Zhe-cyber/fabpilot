@@ -7,12 +7,14 @@
 
 ## Now (top of queue)
 
-- [ ] **Tier 1: multi-agent reroute negotiation** — *lead + domain-researcher + practice-scout.*
-  The networking moat (D-017): per-machine agents negotiate a reroute over the bus.
-  This is the trigger to extract the `fabpilot` action server into a **standalone MCP
-  server** (see D-018 note / MCP discussion) — do it here, where it's load-bearing.
-  *Done when:* two agents coordinate a reroute without a human; reasoning is logged
-  and showable. Reviewed. Scout-checked before starting.
+- [ ] **Tier 1 · Slice B — integrate reroute into the live pipeline** — *lead.*
+  Wire the bus reroute (Slice A, `agent/fleet.py`) to the LLM decision + dashboard:
+  when the agent decides M2 needs rerouting, publish a real request → bidders answer →
+  the arbiter awards and records via the existing `reroute_job` tool → show the
+  request/bid/award on the dashboard.
+  *Done when:* the live pipeline triggers a bus reroute with no human, shown in the UI.
+  Reviewed. (Naturally exercises Slice A's bus round-trip over a real broker — closes
+  the verify-pending-broker caveat below.)
 
 ## Later
 
@@ -25,8 +27,10 @@
 
 - **Reusable SOP / starter-kit extraction** — paused by the builder ("wait a bit messy
   right now"). Revisit when the builder re-initiates.
-- **Standalone MCP server extraction** — not now; trigger is Tier 1 above (premature
-  otherwise, per the MCP-level discussion).
+- **Standalone MCP server extraction** — not now, and **no longer triggered by Tier 1**
+  (the scout confirmed Tier 1's distribution lives on the MQTT bus, not the MCP
+  transport; in-process `ACTION_SERVER` suffices — D-023). Trigger is only if a
+  genuinely separate process ever needs those tools.
 - **Git worktree sandbox** (D-009) — decided, not yet implemented. Low priority.
 
 ## Done (recent)
@@ -49,3 +53,11 @@
   opt-in `--live`. Reviewed. Review fix: hoisted the scenario into `sim/scenario.py`
   as one shared source so the demo and the test can't drift; guarded `--live` against
   an empty-events crash.
+- [x] Tier 1 · Slice A — reroute coordination on the bus (`agent/fleet.py`). Contract-net
+  request→bid→award over MQTT; deterministic arbiter (healthier machine wins). Reviewed;
+  arbiter logic verified. Review fixes: hardened the arbiter against malformed bids
+  (no crash), closed the subscribe race by construction (on_subscribe Events, not
+  sleeps), request-publish failure degrades gracefully.
+  ⚠️ **Verify-pending-broker:** the over-the-bus round-trip was NOT run live (Docker
+  wouldn't start this session). Run `docker compose up -d && python -m agent.fleet` to
+  confirm M1/M3 bid and the healthier wins; Slice B will also exercise it.
