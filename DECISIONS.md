@@ -6,6 +6,27 @@
 
 ---
 
+## 2026-07-01 — Team: add a practice-scout teammate
+
+### D-019 Add a practice-scout agent to own "keep us current"
+- **Decision:** New subagent `.claude/agents/practice-scout.md` whose job is to
+  scout community/industry agentic-engineering practice (ponytail / Microsoft-engineer
+  / Anthropic-official class) and return **Adopt / Watch / Skip** verdicts — not a
+  link dump. Fills the one real gap in the team: no existing teammate owned the
+  standing "keep us updated to the latest smart approach" instruction
+  (domain-researcher scouts *manufacturing*, not *engineering method*).
+- **Why:** The "stay current" job was falling on the main loop ad-hoc, so it only
+  happened when remembered. A named teammate with a tuned prompt makes it a
+  repeatable move at phase boundaries.
+- **Guardrails baked in:** must force a verdict per item, must Skip things that suit
+  a big team but not a solo builder, and "no change needed" is an explicit valid
+  result — so the scout can't become a shiny-object generator.
+- **Rejected:** Adding more teammates (tester, security agent, etc.). The rest of the
+  roster already covers those via skills / built-in agents; one addition, not a
+  reorg. YAGNI.
+
+---
+
 ## 2026-07-01 — Phase 3 slice 1 review closeout
 
 ### D-018 Clamp the RUL horizon; close the missing review pass
