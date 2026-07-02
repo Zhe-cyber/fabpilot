@@ -6,6 +6,29 @@
 
 ---
 
+## 2026-07-02 — Repo public; official competition facts verified
+
+### D-025 Published the repo; recalibrated the plan to official dates
+- **Decision:** Created **github.com/Zhe-cyber/fabpilot** (public) and pushed all
+  commits. Verified the official site (maicnexus.com/en) and recalibrated planning to
+  its dates, replacing SYSTEM_GUIDE estimates.
+- **Official facts (fetched 2026-07-02):** Application **Jun–Aug 2026** (open call,
+  300 teams; RM150 fee — **builder not yet registered**, hardest deadline on the
+  board). Preliminary **Sept 2026** (online, 3 judges, unified 100-point rubric —
+  rubric not public). Semi-final **Oct 2026** (live demo, KL, top 10). Grand Final
+  **Nov 2026**. Submission: pitch deck + project summary + **AI-disclosure statement
+  (all mandatory)**; demo video and artifact/project link **optional**. Track locked
+  at submission.
+- **Corrections to prior assumptions:** SYSTEM_GUIDE said semis ~Sept (actually Oct)
+  and treated the public repo as a hard requirement (officially it's an *optional*
+  artifact link). The repo stays public anyway — it's the portfolio payoff named in
+  the project goal, the strongest optional artifact, and the off-machine backup.
+- **Priority consequence:** the three *mandatory* artifacts (deck, summary,
+  disclosure) are exactly the three not yet started — they outrank further feature
+  work until drafted.
+
+---
+
 ## 2026-07-02 — Competitive positioning, verified against primary sources
 
 ### D-024 The honest wedge: governed autonomy, not "first to close the loop"

@@ -20,8 +20,12 @@
 
 - [ ] **Deployment / real-data story** — makes it real beyond the sim (D-017 lever 4).
 - [ ] **Lightweight knowledge-grounding** for the agent (D-017 lever 5).
-- [ ] **Pitch deck + quotable one-liner** — *pitch-review.* README now tells the
-  architecture story; the actual deck/summary is still to build.
+- [ ] **Mandatory submission artifacts** (deadline-driven — prelim is Sept 2026, D-025):
+  **pitch deck**, **written project summary**, **AI-usage disclosure** — *pitch-review*
+  for the first two; DECISIONS.md/TEAM.md are the disclosure's raw material. Demo video
+  is officially optional but high-value (*demo-script*).
+- [ ] **(Builder, not Claude): register for MAIC Nexus** — Jun–Aug window, RM150.
+  Hardest deadline on the board; everything else assumes entry.
 
 ## Parked (explicit — do not start without re-approval)
 
